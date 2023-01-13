@@ -78,13 +78,55 @@
     <a-space direction="vertical" style="margin-left: 25%">
       <a-card
         :title="'Field-' + index"
-        style="width: 300px"
+        style="width: 700px"
         v-for="(item, index) in formState.dynamicFields"
-        :key="index"
+        :key="item.id"
       >
-        <div><a-input v-model="formState.dynamicFields[index].field"></a-input></div>
-        <p>Card content</p>
-        <MinusCircleOutlined @click="handleRemoveFields(item)" />
+        <div>
+          <a-form-item
+            :name="['dynamicFields', index, 'field']"
+            label="field字段"
+            :rules="[{ required: true, message: 'please input field' }]"
+          >
+            <a-input v-model:value="item.field" @change="handleInput"></a-input>
+          </a-form-item>
+          <a-form-item
+            :name="['dynamicFields', index, 'label']"
+            label="label字段"
+            :rules="[{ required: true, message: 'please input field' }]"
+          >
+            <a-input v-model:value="item.label"></a-input>
+          </a-form-item>
+          <a-form-item label="component字段" :label-col="{ span: 6 }">
+            <a-select
+              v-model:value="item.component"
+              :options="componentOptions"
+            ></a-select>
+          </a-form-item>
+          <a-form-item label="是否搜索字段">
+            <a-radio-group v-model:value="item.isSearchForm">
+              <a-radio :value="true" name="actions">是</a-radio>
+              <a-radio :value="false" name="actions">否</a-radio>
+            </a-radio-group>
+          </a-form-item>
+          <a-form-item label="是否编辑字段">
+            <a-radio-group v-model:value="item.isEditForm">
+              <a-radio :value="true" name="actions">是</a-radio>
+              <a-radio :value="false" name="actions">否</a-radio>
+            </a-radio-group>
+          </a-form-item>
+        </div>
+        <div style="text-align: right">
+          <a-button
+            type="primary"
+            @click="
+              () => {
+                handleRemoveFields(item);
+              }
+            "
+            >删除</a-button
+          >
+        </div>
       </a-card>
     </a-space>
     <a-form-item label="store模块">
@@ -123,14 +165,14 @@
 </template>
 
 <script lang="ts">
-import { defineComponent, reactive, toRaw } from "vue";
+import { defineComponent, reactive, toRaw, ref } from "vue";
 import { Form } from "ant-design-vue";
-import { ProjectConfigScema,DynamicFieldType } from "./types/index";
-import { MinusCircleOutlined } from '@ant-design/icons-vue';
+import { ProjectConfigScema, DynamicFieldType } from "./types/index";
+import { MinusCircleOutlined } from "@ant-design/icons-vue";
 const useForm = Form.useForm;
 export default defineComponent({
   name: "App",
-  components:{MinusCircleOutlined},
+  components: { MinusCircleOutlined },
   setup() {
     const formItemLayout = {
       labelCol: { span: 6 },
@@ -151,7 +193,16 @@ export default defineComponent({
       apis: {
         Origin: "",
       },
-      dynamicFields: [],
+      dynamicFields: [
+        {
+          field: "", //数据库字段
+          label: "", //展示名称
+          component: "Input", //组件
+          isSearchForm: true, //是否是搜索表单字段
+          isEditForm: true,
+          id: Date.now(),
+        },
+      ],
     });
     const ruleRef = reactive({
       projectUrl: [
@@ -196,6 +247,9 @@ export default defineComponent({
           message: "Please input addName",
         },
       ],
+      dynamicFields:[{
+        required:true
+      }]
     });
     const { resetFields, validate, validateInfos } = useForm(
       formState,
@@ -205,7 +259,7 @@ export default defineComponent({
       }
     );
     const onSubmit = async () => {
-      const vals = await validate();
+      const vals = await validate('dynamicFields');
       const demo =
         acquireVsCodeApi ??
         function () {
@@ -222,24 +276,79 @@ export default defineComponent({
         field: "", //数据库字段
         label: "", //展示名称
         component: "Input", //组件
-        isSearchForm: false, //是否是搜索表单字段
+        isSearchForm: true, //是否是搜索表单字段
+        isEditForm: true,
+        id: Date.now(),
       });
     };
 
-    const handleRemoveFields = (item:DynamicFieldType) => {
-      const index = formState.dynamicFields.indexOf(item);
+    const handleRemoveFields = (item: any) => {
+      let index = formState.dynamicFields.indexOf(item);
+      console.log("index:", index);
       if (index !== -1) {
         formState.dynamicFields.splice(index, 1);
       }
     };
+    const componentOptions = ref<Array<any>>([]);
+    componentOptions.value = [
+      "Input",
+      "InputGroup",
+      "InputPassword",
+      "InputSearch",
+      "InputTextArea",
+      "InputNumber",
+      "InputCountDown",
+      "Select",
+      "ApiSelect",
+      "TreeSelect",
+      "ApiTree",
+      "ApiTreeSelect",
+      "ApiRadioGroup",
+      "RadioButtonGroup",
+      "RadioGroup",
+      "Checkbox",
+      "CheckboxGroup",
+      "AutoComplete",
+      "ApiCascader",
+      "Cascader",
+      "DatePicker",
+      "MonthPicker",
+      "RangePicker",
+      "WeekPicker",
+      "TimePicker",
+      "Switch",
+      "StrengthMeter",
+      "Upload",
+      "IconPicker",
+      "Render",
+      "Slider",
+      "Rate",
+      "Divider",
+      "ApiTransfer",
+    ].map((item) => {
+      return {
+        label: item,
+        value: item,
+      };
+    });
+    console.log("componentOptions:", componentOptions);
+    const handleInput = (e) => {
+      console.log("e:", e.target);
+      console.log("formState:", formState);
+    };
+
+    const demo = ref("222");
     return {
       formItemLayout,
       validateInfos,
       formState,
+      componentOptions,
       onSubmit,
       resetFields,
       handleAddFields,
-      handleRemoveFields
+      handleRemoveFields,
+      handleInput,
+      demo,
     };
   },
 });

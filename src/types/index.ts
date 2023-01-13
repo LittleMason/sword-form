@@ -51,6 +51,8 @@ export type DynamicFieldType = {
     label:string; //展示名称
     component:ComponentType; //组件
     isSearchForm:boolean; //是否是搜索表单字段
+    isEditForm:boolean; //是否是编辑表单字段
+    id:any;
 }
 
 
