@@ -73,9 +73,17 @@
       <a-input v-model:value="formState.apis['Export']"></a-input>
     </a-form-item>
     <div class="ant-col ant-col-20" style="text-align: right">
-      <a-button @click="handleAddFields">新增字段</a-button>
+      <a-radio-group v-model:value="fieldViewType" button-style="solid">
+        <a-radio-button value="config">配置字段</a-radio-button>
+        <a-radio-button value="vision">字段可视化</a-radio-button>
+      </a-radio-group>
     </div>
-    <a-space direction="vertical" style="margin-left: 25%">
+    <a-form-item v-if="fieldViewType === 'config'">
+      <a-textarea 
+        v-model:value="formState.dynamicFields"
+      />
+    </a-form-item>
+    <a-space direction="vertical" style="margin-left: 25%" v-else-if="fieldViewType === 'vision'">
       <a-card
         :title="'Field-' + index"
         style="width: 700px"
@@ -128,7 +136,9 @@
           >
         </div>
       </a-card>
+      <a-button @click="handleAddFields" block type="primary"><PlusOutlined /> 新增字段</a-button>
     </a-space>
+
     <a-form-item label="store模块">
       <a-radio-group v-model:value="formState.hasStore">
         <a-radio :value="true">启用</a-radio>
@@ -168,16 +178,18 @@
 import { defineComponent, reactive, toRaw, ref } from "vue";
 import { Form } from "ant-design-vue";
 import { ProjectConfigScema, DynamicFieldType } from "./types/index";
-import { MinusCircleOutlined } from "@ant-design/icons-vue";
+import { MinusCircleOutlined,PlusOutlined } from "@ant-design/icons-vue";
 const useForm = Form.useForm;
 export default defineComponent({
   name: "App",
-  components: { MinusCircleOutlined },
+  components: { MinusCircleOutlined,PlusOutlined },
   setup() {
     const formItemLayout = {
       labelCol: { span: 6 },
       wrapperCol: { span: 14 },
     };
+    type FieldViewType = 'config' | 'vision'
+    const fieldViewType = ref<FieldViewType>('config');
     const formState = reactive<ProjectConfigScema>({
       projectUrl: "",
       modelName: "",
@@ -339,6 +351,7 @@ export default defineComponent({
 
     const demo = ref("222");
     return {
+      fieldViewType,
       formItemLayout,
       validateInfos,
       formState,
