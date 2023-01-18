@@ -78,12 +78,18 @@
         <a-radio-button value="vision">字段可视化</a-radio-button>
       </a-radio-group>
     </div>
-    <a-form-item v-if="fieldViewType === 'config'">
-      <a-textarea 
-        v-model:value="formState.dynamicFields"
+
+    <a-form-item v-show="fieldViewType === 'config'" label="配置字段">
+      <DynamicFieldConfig
+        @handleEditorChange="handleEditorChange"
+        :values="dynamicFieldString"
       />
     </a-form-item>
-    <a-space direction="vertical" style="margin-left: 25%" v-else-if="fieldViewType === 'vision'">
+    <a-space
+      direction="vertical"
+      style="margin-left: 25%"
+      v-show="fieldViewType === 'vision'"
+    >
       <a-card
         :title="'Field-' + index"
         style="width: 700px"
@@ -136,7 +142,9 @@
           >
         </div>
       </a-card>
-      <a-button @click="handleAddFields" block type="primary"><PlusOutlined /> 新增字段</a-button>
+      <a-button @click="handleAddFields" block type="primary"
+        ><PlusOutlined /> 新增字段</a-button
+      >
     </a-space>
 
     <a-form-item label="store模块">
@@ -175,21 +183,24 @@
 </template>
 
 <script lang="ts">
-import { defineComponent, reactive, toRaw, ref } from "vue";
+import { defineComponent, reactive, toRaw, ref, computed } from "vue";
 import { Form } from "ant-design-vue";
 import { ProjectConfigScema, DynamicFieldType } from "./types/index";
-import { MinusCircleOutlined,PlusOutlined } from "@ant-design/icons-vue";
+import { MinusCircleOutlined, PlusOutlined } from "@ant-design/icons-vue";
+import DynamicFieldConfig from "./components/DynamicFieldConfig.vue";
+import { COMPONENTS } from "./util/enum";
 const useForm = Form.useForm;
 export default defineComponent({
   name: "App",
-  components: { MinusCircleOutlined,PlusOutlined },
+  components: { MinusCircleOutlined, PlusOutlined, DynamicFieldConfig },
   setup() {
     const formItemLayout = {
       labelCol: { span: 6 },
       wrapperCol: { span: 14 },
     };
-    type FieldViewType = 'config' | 'vision'
-    const fieldViewType = ref<FieldViewType>('config');
+
+    type FieldViewType = "config" | "vision";
+    const fieldViewType = ref<FieldViewType>("config");
     const formState = reactive<ProjectConfigScema>({
       projectUrl: "",
       modelName: "",
@@ -259,10 +270,22 @@ export default defineComponent({
           message: "Please input addName",
         },
       ],
-      dynamicFields:[{
-        required:true
-      }]
+      dynamicFields: [
+        {
+          required: true,
+        },
+      ],
     });
+    const dynamicFieldString = computed({
+      get() {
+        return JSON.stringify(formState.dynamicFields);
+      },
+      set(val: string) {
+        const noSpace = val.replace(/\s*/g, "");
+        formState.dynamicFields = JSON.parse(noSpace);
+      },
+    });
+
     const { resetFields, validate, validateInfos } = useForm(
       formState,
       ruleRef,
@@ -271,7 +294,7 @@ export default defineComponent({
       }
     );
     const onSubmit = async () => {
-      const vals = await validate('dynamicFields');
+      const vals = await validate("dynamicFields");
       const demo =
         acquireVsCodeApi ??
         function () {
@@ -302,66 +325,33 @@ export default defineComponent({
       }
     };
     const componentOptions = ref<Array<any>>([]);
-    componentOptions.value = [
-      "Input",
-      "InputGroup",
-      "InputPassword",
-      "InputSearch",
-      "InputTextArea",
-      "InputNumber",
-      "InputCountDown",
-      "Select",
-      "ApiSelect",
-      "TreeSelect",
-      "ApiTree",
-      "ApiTreeSelect",
-      "ApiRadioGroup",
-      "RadioButtonGroup",
-      "RadioGroup",
-      "Checkbox",
-      "CheckboxGroup",
-      "AutoComplete",
-      "ApiCascader",
-      "Cascader",
-      "DatePicker",
-      "MonthPicker",
-      "RangePicker",
-      "WeekPicker",
-      "TimePicker",
-      "Switch",
-      "StrengthMeter",
-      "Upload",
-      "IconPicker",
-      "Render",
-      "Slider",
-      "Rate",
-      "Divider",
-      "ApiTransfer",
-    ].map((item) => {
+    componentOptions.value = COMPONENTS.map((item) => {
       return {
         label: item,
         value: item,
       };
     });
-    console.log("componentOptions:", componentOptions);
     const handleInput = (e) => {
       console.log("e:", e.target);
       console.log("formState:", formState);
     };
-
-    const demo = ref("222");
+    const handleEditorChange = (val: string) => {
+      console.log("handleEditorChange-val:", JSON.parse(val));
+      dynamicFieldString.value = val;
+    };
     return {
       fieldViewType,
       formItemLayout,
       validateInfos,
       formState,
+      dynamicFieldString,
       componentOptions,
       onSubmit,
       resetFields,
       handleAddFields,
       handleRemoveFields,
       handleInput,
-      demo,
+      handleEditorChange,
     };
   },
 });
