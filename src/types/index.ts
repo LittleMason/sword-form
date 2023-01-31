@@ -53,6 +53,8 @@ export type DynamicFieldType = {
     isSearchForm:boolean; //是否是搜索表单字段
     isEditForm:boolean; //是否是编辑表单字段
     id:any;
+    required?:boolean; //是否必填字段
+    width?:string | number; //表单列表宽度
 }
 
 

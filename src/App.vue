@@ -73,79 +73,37 @@
       <a-input v-model:value="formState.apis['Export']"></a-input>
     </a-form-item>
     <div class="ant-col ant-col-20" style="text-align: right">
-      <a-radio-group v-model:value="fieldViewType" button-style="solid">
-        <a-radio-button value="config">配置字段</a-radio-button>
-        <a-radio-button value="vision">字段可视化</a-radio-button>
-      </a-radio-group>
+      <a-button type="primary" @click="handleAddField">新增字段</a-button>
     </div>
 
     <a-form-item v-show="fieldViewType === 'config'" label="配置字段">
-      <DynamicFieldConfig
-        @handleEditorChange="handleEditorChange"
-        :values="dynamicFieldString"
-      />
-    </a-form-item>
-    <a-space
-      direction="vertical"
-      style="margin-left: 25%"
-      v-show="fieldViewType === 'vision'"
-    >
-      <a-card
-        :title="'Field-' + index"
-        style="width: 700px"
-        v-for="(item, index) in formState.dynamicFields"
-        :key="item.id"
-      >
-        <div>
-          <a-form-item
-            :name="['dynamicFields', index, 'field']"
-            label="field字段"
-            :rules="[{ required: true, message: 'please input field' }]"
-          >
-            <a-input v-model:value="item.field" @change="handleInput"></a-input>
-          </a-form-item>
-          <a-form-item
-            :name="['dynamicFields', index, 'label']"
-            label="label字段"
-            :rules="[{ required: true, message: 'please input field' }]"
-          >
-            <a-input v-model:value="item.label"></a-input>
-          </a-form-item>
-          <a-form-item label="component字段" :label-col="{ span: 6 }">
+      <a-table :columns="columns" :data-source="formState.dynamicFields" :scroll="{ x: 600, y: 300 }">
+        <template #bodyCell="{ column, text, record,index }">
+          <template v-if="column.dataIndex==='actions'">
+            <a @click="handleDeleteRow(record.id)">删除</a>
+          </template>
+          <template v-else-if="column.dataIndex==='component'">
             <a-select
-              v-model:value="item.component"
               :options="componentOptions"
-            ></a-select>
-          </a-form-item>
-          <a-form-item label="是否搜索字段">
-            <a-radio-group v-model:value="item.isSearchForm">
-              <a-radio :value="true" name="actions">是</a-radio>
-              <a-radio :value="false" name="actions">否</a-radio>
-            </a-radio-group>
-          </a-form-item>
-          <a-form-item label="是否编辑字段">
-            <a-radio-group v-model:value="item.isEditForm">
-              <a-radio :value="true" name="actions">是</a-radio>
-              <a-radio :value="false" name="actions">否</a-radio>
-            </a-radio-group>
-          </a-form-item>
-        </div>
-        <div style="text-align: right">
-          <a-button
-            type="primary"
-            @click="
-              () => {
-                handleRemoveFields(item);
-              }
-            "
-            >删除</a-button
-          >
-        </div>
-      </a-card>
-      <a-button @click="handleAddFields" block type="primary"
-        ><PlusOutlined /> 新增字段</a-button
-      >
-    </a-space>
+              @change="(val)=>{handleChangeDynamicField(val,column.dataIndex,record.id)}"
+              v-model:value="formState.dynamicFields[index][column.dataIndex]"
+            >
+            </a-select>
+          </template>
+          <template v-else-if="['isSearchForm','isEditForm','required'].includes(column.dataIndex)">
+            <a-select
+              :options="shifouOptions"
+              @change="(val)=>{handleChangeDynamicField(val,column.dataIndex,record.id)}"
+              v-model:value="formState.dynamicFields[index][column.dataIndex]"
+            >
+            </a-select>
+          </template>
+          <template v-else-if="column.dataIndex!='id'">
+            <a-input v-model:value="formState.dynamicFields[index][column.dataIndex]" @change="(e)=>{handleChangeDynamicField(e.target.value,column.dataIndex,record.id)}"/>
+          </template>
+        </template>
+      </a-table>
+    </a-form-item>
 
     <a-form-item label="store模块">
       <a-radio-group v-model:value="formState.hasStore">
@@ -166,10 +124,7 @@
       </a-radio-group>
     </a-form-item>
 
-    <a-form-item
-      label="项目默认接口参数"
-      v-bind="validateInfos.hasProjectDefaultParam"
-    >
+    <a-form-item label="项目默认接口参数" v-bind="validateInfos.hasProjectDefaultParam">
       <a-radio-group v-model:value="formState.hasProjectDefaultParam">
         <a-radio :value="true">启用</a-radio>
         <a-radio :value="false">禁用</a-radio>
@@ -189,6 +144,7 @@ import { ProjectConfigScema, DynamicFieldType } from "./types/index";
 import { MinusCircleOutlined, PlusOutlined } from "@ant-design/icons-vue";
 import DynamicFieldConfig from "./components/DynamicFieldConfig.vue";
 import { COMPONENTS } from "./util/enum";
+import { basicColumns } from "./data";
 const useForm = Form.useForm;
 export default defineComponent({
   name: "App",
@@ -201,6 +157,16 @@ export default defineComponent({
 
     type FieldViewType = "config" | "vision";
     const fieldViewType = ref<FieldViewType>("config");
+    const defaultField: DynamicFieldType = {
+      field: "1212", //数据库字段
+      label: "", //展示名称
+      component: "Input", //组件
+      isSearchForm: true, //是否是搜索表单字段
+      isEditForm: true,
+      required: true,
+      width: 100,
+      id: Date.now(),
+    };
     const formState = reactive<ProjectConfigScema>({
       projectUrl: "",
       modelName: "",
@@ -216,16 +182,7 @@ export default defineComponent({
       apis: {
         Origin: "",
       },
-      dynamicFields: [
-        {
-          field: "", //数据库字段
-          label: "", //展示名称
-          component: "Input", //组件
-          isSearchForm: true, //是否是搜索表单字段
-          isEditForm: true,
-          id: Date.now(),
-        },
-      ],
+      dynamicFields: [defaultField],
     });
     const ruleRef = reactive({
       projectUrl: [
@@ -286,44 +243,25 @@ export default defineComponent({
       },
     });
 
-    const { resetFields, validate, validateInfos } = useForm(
-      formState,
-      ruleRef,
-      {
-        onValidate: (...args) => console.log(...args),
-      }
-    );
+    const { resetFields, validate, validateInfos } = useForm(formState, ruleRef, {
+      onValidate: (...args) => console.log(...args),
+    });
     const onSubmit = async () => {
-      const vals = await validate("dynamicFields");
-      const demo =
+      const vals = await validate();
+      console.log("formState:", formState);
+      const vscodeInterface =
         acquireVsCodeApi ??
         function () {
           console.log("没有acquireVsCodeApi方法");
         };
-      if (typeof demo === "function") {
-        const vscode = demo();
+      if (typeof vscodeInterface === "function") {
+        const vscode = vscodeInterface();
         vscode.postMessage(toRaw(formState));
       }
     };
 
-    const handleAddFields = () => {
-      formState.dynamicFields.push({
-        field: "", //数据库字段
-        label: "", //展示名称
-        component: "Input", //组件
-        isSearchForm: true, //是否是搜索表单字段
-        isEditForm: true,
-        id: Date.now(),
-      });
-    };
+    //table
 
-    const handleRemoveFields = (item: any) => {
-      let index = formState.dynamicFields.indexOf(item);
-      console.log("index:", index);
-      if (index !== -1) {
-        formState.dynamicFields.splice(index, 1);
-      }
-    };
     const componentOptions = ref<Array<any>>([]);
     componentOptions.value = COMPONENTS.map((item) => {
       return {
@@ -331,14 +269,42 @@ export default defineComponent({
         value: item,
       };
     });
-    const handleInput = (e) => {
-      console.log("e:", e.target);
-      console.log("formState:", formState);
+    const shifouOptions = [
+      {
+        label: '是',
+        value: true,
+      },
+      {
+        label: '否',
+        value: false,
+      }
+    ]
+    const handleAddField = () => {
+      formState.dynamicFields.push({
+        ...defaultField,
+        id:Date.now()
+      });
     };
-    const handleEditorChange = (val: string) => {
-      console.log("handleEditorChange-val:", JSON.parse(val));
-      dynamicFieldString.value = val;
-    };
+
+    const handleDeleteRow=(id)=>{
+      console.log('id:',id);
+      let inx:any = 0;
+      for(let x in formState.dynamicFields){
+        if(formState.dynamicFields[x].id===id){
+          inx = x;
+        }
+      }
+      console.log('inx:',inx);
+      formState.dynamicFields.splice(inx,1)
+    }
+    const handleChangeDynamicField = (val,key,id)=>{
+      for(let x in formState.dynamicFields){
+        if(id===formState.dynamicFields[x].id){
+          formState.dynamicFields[x][key] = val;
+        }
+      }
+      console.log('formState:',formState.dynamicFields);
+    }
     return {
       fieldViewType,
       formItemLayout,
@@ -346,12 +312,13 @@ export default defineComponent({
       formState,
       dynamicFieldString,
       componentOptions,
+      shifouOptions,
+      columns: basicColumns,
       onSubmit,
       resetFields,
-      handleAddFields,
-      handleRemoveFields,
-      handleInput,
-      handleEditorChange,
+      handleAddField,
+      handleDeleteRow,
+      handleChangeDynamicField
     };
   },
 });
