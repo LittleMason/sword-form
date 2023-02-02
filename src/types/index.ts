@@ -50,10 +50,10 @@ export type DynamicFieldType = {
     field:string; //数据库字段
     label:string; //展示名称
     component:ComponentType; //组件
-    isSearchForm:boolean; //是否是搜索表单字段
-    isEditForm:boolean; //是否是编辑表单字段
+    isSearchForm:boolean | number; //是否是搜索表单字段
+    isEditForm:boolean | number; //是否是编辑表单字段
     id:any;
-    required?:boolean; //是否必填字段
+    required?:boolean | number; //是否必填字段
     width?:string | number; //表单列表宽度
 }
 

@@ -6,6 +6,12 @@ export const basicColumns = [
     align:'center'
   },
   {
+    title: "序号",
+    dataIndex: "xuhao",
+    width: 100,
+    align:'center'
+  },
+  {
     title: "field",
     dataIndex: "field",
     width: 100,

@@ -76,7 +76,7 @@
       <a-button type="primary" @click="handleAddField">新增字段</a-button>
     </div>
 
-    <a-form-item v-show="fieldViewType === 'config'" label="配置字段">
+    <a-form-item label="配置字段">
       <a-table :columns="columns" :data-source="formState.dynamicFields" :scroll="{ x: 600, y: 300 }">
         <template #bodyCell="{ column, text, record,index }">
           <template v-if="column.dataIndex==='actions'">
@@ -97,6 +97,9 @@
               v-model:value="formState.dynamicFields[index][column.dataIndex]"
             >
             </a-select>
+          </template>
+          <template v-else-if="column.dataIndex==='xuhao'">
+              <span>{{ index+1 }}</span>
           </template>
           <template v-else-if="column.dataIndex!='id'">
             <a-input v-model:value="formState.dynamicFields[index][column.dataIndex]" @change="(e)=>{handleChangeDynamicField(e.target.value,column.dataIndex,record.id)}"/>
@@ -142,28 +145,25 @@ import { defineComponent, reactive, toRaw, ref, computed } from "vue";
 import { Form } from "ant-design-vue";
 import { ProjectConfigScema, DynamicFieldType } from "./types/index";
 import { MinusCircleOutlined, PlusOutlined } from "@ant-design/icons-vue";
-import DynamicFieldConfig from "./components/DynamicFieldConfig.vue";
 import { COMPONENTS } from "./util/enum";
 import { basicColumns } from "./data";
 const useForm = Form.useForm;
 export default defineComponent({
   name: "App",
-  components: { MinusCircleOutlined, PlusOutlined, DynamicFieldConfig },
+  components: { MinusCircleOutlined, PlusOutlined },
   setup() {
     const formItemLayout = {
       labelCol: { span: 6 },
       wrapperCol: { span: 14 },
     };
 
-    type FieldViewType = "config" | "vision";
-    const fieldViewType = ref<FieldViewType>("config");
     const defaultField: DynamicFieldType = {
-      field: "1212", //数据库字段
+      field: "", //数据库字段
       label: "", //展示名称
       component: "Input", //组件
-      isSearchForm: true, //是否是搜索表单字段
-      isEditForm: true,
-      required: true,
+      isSearchForm: 1, //是否是搜索表单字段
+      isEditForm: 1,
+      required: 1,
       width: 100,
       id: Date.now(),
     };
@@ -272,11 +272,11 @@ export default defineComponent({
     const shifouOptions = [
       {
         label: '是',
-        value: true,
+        value: 1,
       },
       {
         label: '否',
-        value: false,
+        value: 0,
       }
     ]
     const handleAddField = () => {
@@ -306,7 +306,6 @@ export default defineComponent({
       console.log('formState:',formState.dynamicFields);
     }
     return {
-      fieldViewType,
       formItemLayout,
       validateInfos,
       formState,
