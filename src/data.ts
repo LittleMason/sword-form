@@ -1,4 +1,6 @@
-export const basicColumns = [
+import { ref } from "vue";
+
+export const basicColumns = ref([
   {
     title: "操作",
     dataIndex: "actions",
@@ -8,20 +10,29 @@ export const basicColumns = [
   {
     title: "序号",
     dataIndex: "xuhao",
-    width: 100,
+    width: 80,
     align:'center'
   },
   {
-    title: "field",
+    title: "table字段",
     dataIndex: "field",
-    width: 100,
-    align:'center'
+    width: 150,
+    align:'center',
+    resizable:true
+  },
+  {
+    title: "form字段",
+    dataIndex: "formField",
+    width: 150,
+    align:'center',
+    resizable:true
   },
   {
     title: "字段名称",
     dataIndex: "label",
-    width: 100,
-    align:'center'
+    width: 150,
+    align:'center',
+    resizable:true
   },
   {
     title: "组件",
@@ -60,4 +71,4 @@ export const basicColumns = [
     ellipsis:true,
     width: 120,
   },
-];
+]);

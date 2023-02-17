@@ -27,7 +27,7 @@
         <a-checkbox value="_export" name="actions">导出</a-checkbox>
       </a-checkbox-group>
     </a-form-item>
-    <a-form-item label="查询接口" v-bind="validateInfos.apis">
+    <a-form-item label="查询接口" v-bind="validateInfos.apis['Origin']">
       <a-input v-model:value="formState.apis['Origin']"></a-input>
     </a-form-item>
     <a-form-item
@@ -77,32 +77,56 @@
     </div>
 
     <a-form-item label="配置字段">
-      <a-table :columns="columns" :data-source="formState.dynamicFields" :scroll="{ x: 600, y: 300 }">
-        <template #bodyCell="{ column, text, record,index }">
-          <template v-if="column.dataIndex==='actions'">
+      <a-table
+        :columns="columns"
+        :data-source="formState.dynamicFields"
+        :scroll="{ x: 600, y: 300 }"
+        @resizeColumn="handleResizeColumn"
+      >
+        <template #bodyCell="{ column, text, record, index }">
+          <template v-if="column.dataIndex === 'actions'">
             <a @click="handleDeleteRow(record.id)">删除</a>
           </template>
-          <template v-else-if="column.dataIndex==='component'">
+          <template v-else-if="column.dataIndex === 'component'">
             <a-select
               :options="componentOptions"
-              @change="(val)=>{handleChangeDynamicField(val,column.dataIndex,record.id)}"
+              @change="
+                (val) => {
+                  handleChangeDynamicField(val, column.dataIndex, record.id);
+                }
+              "
               v-model:value="formState.dynamicFields[index][column.dataIndex]"
             >
             </a-select>
           </template>
-          <template v-else-if="['isSearchForm','isEditForm','required'].includes(column.dataIndex)">
+          <template
+            v-else-if="
+              ['isSearchForm', 'isEditForm', 'required'].includes(column.dataIndex)
+            "
+          >
             <a-select
               :options="shifouOptions"
-              @change="(val)=>{handleChangeDynamicField(val,column.dataIndex,record.id)}"
+              @change="
+                (val) => {
+                  handleChangeDynamicField(val, column.dataIndex, record.id);
+                }
+              "
               v-model:value="formState.dynamicFields[index][column.dataIndex]"
             >
             </a-select>
           </template>
-          <template v-else-if="column.dataIndex==='xuhao'">
-              <span>{{ index+1 }}</span>
+          <template v-else-if="column.dataIndex === 'xuhao'">
+            <span>{{ index + 1 }}</span>
           </template>
-          <template v-else-if="column.dataIndex!='id'">
-            <a-input v-model:value="formState.dynamicFields[index][column.dataIndex]" @change="(e)=>{handleChangeDynamicField(e.target.value,column.dataIndex,record.id)}"/>
+          <template v-else-if="column.dataIndex != 'id'">
+            <a-input
+              v-model:value="formState.dynamicFields[index][column.dataIndex]"
+              @change="
+                (e) => {
+                  handleChangeDynamicField(e.target.value, column.dataIndex, record.id);
+                }
+              "
+            />
           </template>
         </template>
       </a-table>
@@ -159,6 +183,7 @@ export default defineComponent({
 
     const defaultField: DynamicFieldType = {
       field: "", //数据库字段
+      formField: "",
       label: "", //展示名称
       component: "Input", //组件
       isSearchForm: 1, //是否是搜索表单字段
@@ -182,7 +207,7 @@ export default defineComponent({
       apis: {
         Origin: "",
       },
-      dynamicFields: [defaultField],
+      dynamicFields: [{ ...defaultField }],
     });
     const ruleRef = reactive({
       projectUrl: [
@@ -232,6 +257,20 @@ export default defineComponent({
           required: true,
         },
       ],
+      // "apis.Origin": [
+      //   {
+      //     required: true,
+      //     mesaage: "asdasd",
+      //   },
+      // ],
+      apis: {
+        Origin: [
+          {
+            required: true,
+            mesaage: "asdasd",
+          },
+        ],
+      },
     });
     const dynamicFieldString = computed({
       get() {
@@ -271,40 +310,40 @@ export default defineComponent({
     });
     const shifouOptions = [
       {
-        label: '是',
+        label: "是",
         value: 1,
       },
       {
-        label: '否',
+        label: "否",
         value: 0,
-      }
-    ]
+      },
+    ];
     const handleAddField = () => {
       formState.dynamicFields.push({
         ...defaultField,
-        id:Date.now()
+        id: Date.now(),
       });
     };
 
-    const handleDeleteRow=(id)=>{
-      console.log('id:',id);
-      let inx:any = 0;
-      for(let x in formState.dynamicFields){
-        if(formState.dynamicFields[x].id===id){
+    const handleDeleteRow = (id) => {
+      console.log("id:", id);
+      let inx: any = 0;
+      for (let x in formState.dynamicFields) {
+        if (formState.dynamicFields[x].id === id) {
           inx = x;
         }
       }
-      console.log('inx:',inx);
-      formState.dynamicFields.splice(inx,1)
-    }
-    const handleChangeDynamicField = (val,key,id)=>{
-      for(let x in formState.dynamicFields){
-        if(id===formState.dynamicFields[x].id){
+      console.log("inx:", inx);
+      formState.dynamicFields.splice(inx, 1);
+    };
+    const handleChangeDynamicField = (val, key, id) => {
+      for (let x in formState.dynamicFields) {
+        if (id === formState.dynamicFields[x].id) {
           formState.dynamicFields[x][key] = val;
         }
       }
-      console.log('formState:',formState.dynamicFields);
-    }
+      console.log("formState:", formState.dynamicFields);
+    };
     return {
       formItemLayout,
       validateInfos,
@@ -317,7 +356,10 @@ export default defineComponent({
       resetFields,
       handleAddField,
       handleDeleteRow,
-      handleChangeDynamicField
+      handleChangeDynamicField,
+      handleResizeColumn: (w, col) => {
+        col.width = w;
+      },
     };
   },
 });
