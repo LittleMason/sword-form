@@ -27,48 +27,48 @@
         <a-checkbox value="_export" name="actions">导出</a-checkbox>
       </a-checkbox-group>
     </a-form-item>
-    <a-form-item label="查询接口" v-bind="validateInfos.apis['Origin']">
+    <a-form-item label="查询接口" v-bind="validateInfos['apis.Origin']">
       <a-input v-model:value="formState.apis['Origin']"></a-input>
     </a-form-item>
     <a-form-item
       v-if="formState.actions.indexOf('add') > -1"
       label="新增接口"
-      v-bind="validateInfos.apis"
+      v-bind="validateInfos['apis.Add']"
     >
       <a-input v-model:value="formState.apis['Add']"></a-input>
     </a-form-item>
     <a-form-item
       v-if="formState.actions.indexOf('del') > -1"
       label="删除接口"
-      v-bind="validateInfos.apis"
+      v-bind="validateInfos['apis.Del']"
     >
       <a-input v-model:value="formState.apis['Del']"></a-input>
     </a-form-item>
     <a-form-item
       v-if="formState.actions.indexOf('edit') > -1"
       label="编辑接口"
-      v-bind="validateInfos.apis"
+      v-bind="validateInfos['apis.Edit']"
     >
       <a-input v-model:value="formState.apis['Edit']"></a-input>
     </a-form-item>
     <a-form-item
       v-if="formState.actions.indexOf('upload') > -1"
       label="导入接口"
-      v-bind="validateInfos.apis"
+      v-bind="validateInfos['apis.Upload']"
     >
       <a-input v-model:value="formState.apis['Upload']"></a-input>
     </a-form-item>
     <a-form-item
       v-if="formState.actions.indexOf('upload') > -1"
       label="下载接口"
-      v-bind="validateInfos.apis"
+      v-bind="validateInfos['apis.Download']"
     >
       <a-input v-model:value="formState.apis['Download']"></a-input>
     </a-form-item>
     <a-form-item
       v-if="formState.actions.indexOf('_export') > -1"
       label="导出接口"
-      v-bind="validateInfos.apis"
+      v-bind="validateInfos['apis.Export']"
     >
       <a-input v-model:value="formState.apis['Export']"></a-input>
     </a-form-item>
@@ -166,7 +166,7 @@
 
 <script lang="ts">
 import { defineComponent, reactive, toRaw, ref, computed } from "vue";
-import { Form } from "ant-design-vue";
+import { Form, message } from "ant-design-vue";
 import { ProjectConfigScema, DynamicFieldType } from "./types/index";
 import { MinusCircleOutlined, PlusOutlined } from "@ant-design/icons-vue";
 import { COMPONENTS } from "./util/enum";
@@ -257,20 +257,48 @@ export default defineComponent({
           required: true,
         },
       ],
-      // "apis.Origin": [
-      //   {
-      //     required: true,
-      //     mesaage: "asdasd",
-      //   },
-      // ],
-      apis: {
-        Origin: [
-          {
-            required: true,
-            mesaage: "asdasd",
-          },
-        ],
-      },
+      "apis.Origin": [
+        {
+          required: true,
+          mesaage: "Please input this input",
+        },
+      ],
+      "apis.Add": [
+        {
+          required: true,
+          mesaage: "Please input this input",
+        },
+      ],
+      "apis.Edit": [
+        {
+          required: true,
+          mesaage: "Please input this input",
+        },
+      ],
+      "apis.Upload": [
+        {
+          required: true,
+          mesaage: "Please input this input",
+        },
+      ],
+      "apis.Del": [
+        {
+          required: true,
+          mesaage: "Please input this input",
+        },
+      ],
+      "apis.Export": [
+        {
+          required: true,
+          mesaage: "Please input this input",
+        },
+      ],
+      "apis.Download": [
+        {
+          required: true,
+          mesaage: "Please input this input",
+        },
+      ],
     });
     const dynamicFieldString = computed({
       get() {
@@ -285,16 +313,15 @@ export default defineComponent({
     const { resetFields, validate, validateInfos } = useForm(formState, ruleRef, {
       onValidate: (...args) => console.log(...args),
     });
+    const vscodeInterface =
+      acquireVsCodeApi ??
+      function () {
+        console.log("没有acquireVsCodeApi方法");
+      };
+    const vscode = vscodeInterface();
     const onSubmit = async () => {
-      const vals = await validate();
-      console.log("formState:", formState);
-      const vscodeInterface =
-        acquireVsCodeApi ??
-        function () {
-          console.log("没有acquireVsCodeApi方法");
-        };
+      await validate();
       if (typeof vscodeInterface === "function") {
-        const vscode = vscodeInterface();
         vscode.postMessage(toRaw(formState));
       }
     };
@@ -326,14 +353,12 @@ export default defineComponent({
     };
 
     const handleDeleteRow = (id) => {
-      console.log("id:", id);
       let inx: any = 0;
       for (let x in formState.dynamicFields) {
         if (formState.dynamicFields[x].id === id) {
           inx = x;
         }
       }
-      console.log("inx:", inx);
       formState.dynamicFields.splice(inx, 1);
     };
     const handleChangeDynamicField = (val, key, id) => {

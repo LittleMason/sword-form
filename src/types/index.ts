@@ -48,7 +48,7 @@ export type ApiType = {
 
 export type DynamicFieldType = {
     field:string; //在table显示的字段
-    formField:string; //form提交时的字段
+    formField:string | undefined; //form提交时的字段
     label:string; //展示名称
     component:ComponentType; //组件
     isSearchForm:boolean | number; //是否是搜索表单字段
