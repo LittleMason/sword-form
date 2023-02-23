@@ -165,7 +165,8 @@
 </template>
 
 <script lang="ts">
-import { defineComponent, reactive, toRaw, ref, computed } from "vue";
+declare let acquireVsCodeApi:any;
+import { defineComponent, reactive, toRaw, ref, computed,onMounted } from "vue";
 import { Form, message } from "ant-design-vue";
 import { ProjectConfigScema, DynamicFieldType } from "./types/index";
 import { MinusCircleOutlined, PlusOutlined } from "@ant-design/icons-vue";
@@ -176,6 +177,7 @@ export default defineComponent({
   name: "App",
   components: { MinusCircleOutlined, PlusOutlined },
   setup() {
+    //form
     const formItemLayout = {
       labelCol: { span: 6 },
       wrapperCol: { span: 14 },
@@ -313,8 +315,8 @@ export default defineComponent({
     const { resetFields, validate, validateInfos } = useForm(formState, ruleRef, {
       onValidate: (...args) => console.log(...args),
     });
-    const vscodeInterface =
-      acquireVsCodeApi ??
+
+    const vscodeInterface =window.acquireVsCodeApi ??
       function () {
         console.log("没有acquireVsCodeApi方法");
       };
@@ -325,9 +327,15 @@ export default defineComponent({
         vscode.postMessage(toRaw(formState));
       }
     };
+    // watch vscode postMessage
+    onMounted(()=>{
+      window.addEventListener('message',(event)=>{
+        const receiveDatas = event.data;
+        formState.projectUrl = receiveDatas['rootPath']
+      })
+    })
 
     //table
-
     const componentOptions = ref<Array<any>>([]);
     componentOptions.value = COMPONENTS.map((item) => {
       return {
@@ -369,6 +377,9 @@ export default defineComponent({
       }
       console.log("formState:", formState.dynamicFields);
     };
+
+
+
     return {
       formItemLayout,
       validateInfos,

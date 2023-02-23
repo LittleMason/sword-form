@@ -64,11 +64,4 @@ export const basicColumns = ref([
     width: 100,
     align:'center'
   },
-  {
-    title: "自定义ID",
-    dataIndex: "id",
-    align:'center',
-    ellipsis:true,
-    width: 120,
-  },
 ]);
