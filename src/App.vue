@@ -194,16 +194,21 @@
         <a-radio :value="false">禁用</a-radio>
       </a-radio-group>
     </a-form-item>
-    <a-form-item :wrapper-col="{ span: 14, offset: 4 }">
-      <a-button type="primary" @click.prevent="onSubmit">Create</a-button>
-      <a-button style="margin-left: 10px" @click="resetFields">Reset</a-button>
+    <a-form-item :colon="false">
+      <template #label>
+        <span style="color:white">按钮</span>
+      </template>
+      <div style="text-align:right">
+        <a-button type="primary" @click.prevent="onSubmit">Create</a-button>
+        <a-button style="margin-left: 10px" @click="resetFields">Reset</a-button>
+      </div>
     </a-form-item>
   </a-form>
 </template>
 
 <script lang="ts">
 import { defineComponent, reactive, toRaw, ref, computed, onMounted } from "vue";
-import { Form, message } from "ant-design-vue";
+import { Form } from "ant-design-vue";
 import { ProjectConfigScema, DynamicFieldType } from "./types/index";
 import {
   MinusCircleOutlined,
