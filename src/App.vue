@@ -1,12 +1,49 @@
 <template>
   <a-form name="sword1Form" v-bind="formItemLayout">
-    <a-form-item label="项目路径" v-bind="validateInfos.projectUrl">
+    <a-form-item v-bind="validateInfos.projectUrl">
+      <template #label>
+        <span>
+        项目路径 
+        <a-popover>
+          <template #content>
+            This field is what project  you want build  of path, <br/>
+            This plugin will automatically select current workspace path
+          </template>
+          <question-circle-outlined :style="{ fontSize: '18px' }" />
+        </a-popover>
+        </span>
+      </template>
       <a-input v-model:value="formState.projectUrl"></a-input>
     </a-form-item>
-    <a-form-item label="模块名称" v-bind="validateInfos.modelName">
+    <a-form-item v-bind="validateInfos.modelName">
+      <template #label>
+        <span>
+          模块名称 
+        <a-popover>
+          <template #content>
+            This field is what business module you want build, <br/>
+            it will be generate at folder of 'views','api' eg of below
+          </template>
+          <question-circle-outlined :style="{ fontSize: '18px' }" />
+        </a-popover>
+        </span>
+      </template>
       <a-input v-model:value="formState.modelName"></a-input>
     </a-form-item>
-    <a-form-item label="模块路径" v-bind="validateInfos.modelPath">
+    <a-form-item v-bind="validateInfos.modelPath">
+      <template #label>
+        <span>
+          模块路径 
+        <a-popover>
+          <template #content>
+            This field is generated business module of path, <br/>
+            plugin will automatically add prefix of till current project's 'views' folder for this field,include end of symbol '/'<br/>
+            so you just like input follow: [fatherPath]*/moduleName <span style="color:red">(don't need '/' in the began)</span>
+          </template>
+          <question-circle-outlined :style="{ fontSize: '18px' }" />
+        </a-popover>
+        </span>
+      </template>
       <a-input v-model:value="formState.modelPath"></a-input>
     </a-form-item>
     <a-form-item label="表格名称" v-bind="validateInfos.title">
@@ -138,7 +175,7 @@
         <a-radio :value="false">禁用</a-radio>
       </a-radio-group>
     </a-form-item>
-    <a-form-item label="下拉字典" v-bind="validateInfos.hasDictionary">
+    <!-- <a-form-item label="下拉字典" v-bind="validateInfos.hasDictionary">
       <a-radio-group v-model:value="formState.hasDictionary">
         <a-radio :value="true">启用</a-radio>
         <a-radio :value="false">禁用</a-radio>
@@ -149,7 +186,7 @@
         <a-radio :value="true">启用</a-radio>
         <a-radio :value="false">禁用</a-radio>
       </a-radio-group>
-    </a-form-item>
+    </a-form-item> -->
 
     <a-form-item label="项目默认接口参数" v-bind="validateInfos.hasProjectDefaultParam">
       <a-radio-group v-model:value="formState.hasProjectDefaultParam">
@@ -165,17 +202,20 @@
 </template>
 
 <script lang="ts">
-declare let acquireVsCodeApi:any;
-import { defineComponent, reactive, toRaw, ref, computed,onMounted } from "vue";
+import { defineComponent, reactive, toRaw, ref, computed, onMounted } from "vue";
 import { Form, message } from "ant-design-vue";
 import { ProjectConfigScema, DynamicFieldType } from "./types/index";
-import { MinusCircleOutlined, PlusOutlined } from "@ant-design/icons-vue";
+import {
+  MinusCircleOutlined,
+  PlusOutlined,
+  QuestionCircleOutlined,
+} from "@ant-design/icons-vue";
 import { COMPONENTS } from "./util/enum";
 import { basicColumns } from "./data";
 const useForm = Form.useForm;
 export default defineComponent({
   name: "App",
-  components: { MinusCircleOutlined, PlusOutlined },
+  components: { MinusCircleOutlined, PlusOutlined, QuestionCircleOutlined },
   setup() {
     //form
     const formItemLayout = {
@@ -232,7 +272,7 @@ export default defineComponent({
       ],
       actions: [
         {
-          required: true,
+          required: false,
           message: "Please select actions",
         },
       ],
@@ -316,7 +356,8 @@ export default defineComponent({
       onValidate: (...args) => console.log(...args),
     });
 
-    const vscodeInterface =window.acquireVsCodeApi ??
+    const vscodeInterface =
+      window.acquireVsCodeApi ??
       function () {
         console.log("没有acquireVsCodeApi方法");
       };
@@ -328,12 +369,12 @@ export default defineComponent({
       }
     };
     // watch vscode postMessage
-    onMounted(()=>{
-      window.addEventListener('message',(event)=>{
+    onMounted(() => {
+      window.addEventListener("message", (event) => {
         const receiveDatas = event.data;
-        formState.projectUrl = receiveDatas['rootPath']
-      })
-    })
+        formState.projectUrl = receiveDatas["rootPath"];
+      });
+    });
 
     //table
     const componentOptions = ref<Array<any>>([]);
@@ -377,8 +418,6 @@ export default defineComponent({
       }
       console.log("formState:", formState.dynamicFields);
     };
-
-
 
     return {
       formItemLayout,
