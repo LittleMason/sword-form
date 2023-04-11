@@ -3,14 +3,14 @@
     <a-form-item v-bind="validateInfos.projectUrl">
       <template #label>
         <span>
-        项目路径 
-        <a-popover>
-          <template #content>
-            This field is what project  you want build  of path, <br/>
-            This plugin will automatically select current workspace path
-          </template>
-          <question-circle-outlined :style="{ fontSize: '18px' }" />
-        </a-popover>
+          项目路径
+          <a-popover>
+            <template #content>
+              This field is what project you want build of path, <br />
+              This plugin will automatically select current workspace path
+            </template>
+            <question-circle-outlined :style="{ fontSize: '18px' }" />
+          </a-popover>
         </span>
       </template>
       <a-input v-model:value="formState.projectUrl"></a-input>
@@ -18,14 +18,14 @@
     <a-form-item v-bind="validateInfos.modelName">
       <template #label>
         <span>
-          模块名称 
-        <a-popover>
-          <template #content>
-            This field is what business module you want build, <br/>
-            it will be generate at folder of 'views','api' eg of below
-          </template>
-          <question-circle-outlined :style="{ fontSize: '18px' }" />
-        </a-popover>
+          模块名称
+          <a-popover>
+            <template #content>
+              This field is what business module you want build, <br />
+              it will be generate at folder of 'views','api' eg of below
+            </template>
+            <question-circle-outlined :style="{ fontSize: '18px' }" />
+          </a-popover>
         </span>
       </template>
       <a-input v-model:value="formState.modelName"></a-input>
@@ -33,15 +33,17 @@
     <a-form-item v-bind="validateInfos.modelPath">
       <template #label>
         <span>
-          模块路径 
-        <a-popover>
-          <template #content>
-            This field is generated business module of path, <br/>
-            plugin will automatically add prefix of till current project's 'views' folder for this field,include end of symbol '/'<br/>
-            so you just like input follow: [fatherPath]*/moduleName <span style="color:red">(don't need '/' in the began)</span>
-          </template>
-          <question-circle-outlined :style="{ fontSize: '18px' }" />
-        </a-popover>
+          模块路径
+          <a-popover>
+            <template #content>
+              This field is generated business module of path, <br />
+              plugin will automatically add prefix of till current project's 'views'
+              folder for this field,include end of symbol '/'<br />
+              so you just like input follow: [fatherPath]*/moduleName
+              <span style="color: red">(don't need '/' in the began)</span>
+            </template>
+            <question-circle-outlined :style="{ fontSize: '18px' }" />
+          </a-popover>
         </span>
       </template>
       <a-input v-model:value="formState.modelPath"></a-input>
@@ -56,7 +58,7 @@
       <a-input v-model:value="formState.apiFileName"></a-input>
     </a-form-item>
     <a-form-item label="操作启用" v-bind="validateInfos.actions">
-      <a-checkbox-group v-model:value="formState.actions">
+      <a-checkbox-group v-model:value="formState.actions" @change="handleActions">
         <a-checkbox value="add" name="actions">新增</a-checkbox>
         <a-checkbox value="del" name="actions">删除</a-checkbox>
         <a-checkbox value="edit" name="actions">编辑</a-checkbox>
@@ -119,6 +121,7 @@
         :data-source="formState.dynamicFields"
         :scroll="{ x: 600, y: 300 }"
         @resizeColumn="handleResizeColumn"
+        :pagination="{defaultPageSize:1000}"
       >
         <template #bodyCell="{ column, text, record, index }">
           <template v-if="column.dataIndex === 'actions'">
@@ -126,6 +129,7 @@
           </template>
           <template v-else-if="column.dataIndex === 'component'">
             <a-select
+              show-search
               :options="componentOptions"
               @change="
                 (val) => {
@@ -196,9 +200,9 @@
     </a-form-item>
     <a-form-item :colon="false">
       <template #label>
-        <span style="color:white">按钮</span>
+        <span style="color: white">按钮</span>
       </template>
-      <div style="text-align:right">
+      <div style="text-align: right">
         <a-button type="primary" @click.prevent="onSubmit">Create</a-button>
         <a-button style="margin-left: 10px" @click="resetFields">Reset</a-button>
       </div>
@@ -222,6 +226,11 @@ export default defineComponent({
   name: "App",
   components: { MinusCircleOutlined, PlusOutlined, QuestionCircleOutlined },
   setup() {
+    const isSimpleSearch = ref(false); //是否为纯查询界面
+    const initColumns = basicColumns.filter((item) => {
+      return ["是否必填", "编辑字段"].indexOf(item.title) === -1;
+    });
+    const dynamicColumns = ref<Array<any>>(initColumns); //动态columns
     //form
     const formItemLayout = {
       labelCol: { span: 6 },
@@ -244,7 +253,7 @@ export default defineComponent({
       modelName: "",
       modelPath: "",
       title: "",
-      actions: ["add", "edit"],
+      actions: [],
       apiFileName: "",
       addName: "",
       hasStore: false,
@@ -357,9 +366,7 @@ export default defineComponent({
       },
     });
 
-    const { resetFields, validate, validateInfos } = useForm(formState, ruleRef, {
-      onValidate: (...args) => console.log(...args),
-    });
+    const { resetFields, validate, validateInfos } = useForm(formState, ruleRef);
 
     const vscodeInterface =
       window.acquireVsCodeApi ??
@@ -368,7 +375,14 @@ export default defineComponent({
       };
     const vscode = vscodeInterface();
     const onSubmit = async () => {
+      
       await validate();
+      if(isSimpleSearch){
+        formState.dynamicFields =formState.dynamicFields.map(item=>{
+          return {...item,isEditForm:0,required:0}
+        })
+      }
+      console.log("formState:", formState);
       if (typeof vscodeInterface === "function") {
         vscode.postMessage(toRaw(formState));
       }
@@ -421,7 +435,18 @@ export default defineComponent({
           formState.dynamicFields[x][key] = val;
         }
       }
-      console.log("formState:", formState.dynamicFields);
+    };
+
+    const handleActions = (val) => {
+      if (val.length) {
+        isSimpleSearch.value = true;
+        dynamicColumns.value = basicColumns;
+      } else {
+        isSimpleSearch.value = false;
+        dynamicColumns.value = dynamicColumns.value.filter((item) => {
+          return ["是否必填", "编辑字段"].indexOf(item.title) === -1;
+        });
+      }
     };
 
     return {
@@ -431,12 +456,13 @@ export default defineComponent({
       dynamicFieldString,
       componentOptions,
       shifouOptions,
-      columns: basicColumns,
+      columns: dynamicColumns,
       onSubmit,
       resetFields,
       handleAddField,
       handleDeleteRow,
       handleChangeDynamicField,
+      handleActions,
       handleResizeColumn: (w, col) => {
         col.width = w;
       },

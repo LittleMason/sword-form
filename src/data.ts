@@ -1,6 +1,5 @@
-import { ref } from "vue";
 
-export const basicColumns = ref([
+export const basicColumns = [
   {
     title: "操作",
     dataIndex: "actions",
@@ -64,4 +63,4 @@ export const basicColumns = ref([
     width: 100,
     align:'center'
   },
-]);
+];
